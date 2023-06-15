@@ -1,16 +1,22 @@
 
-
-
 import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+
+
+
+const socket = io('http://127.0.0.1:5000'); 
+
 
 const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [processedFrame, setProcessedFrame] = useState<string>('');
 
   const startCapture = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setVideoStream(stream);
+      socket.emit('start_capture');
     } catch (error) {
       console.error('Error accessing camera:', error);
     }
@@ -21,6 +27,7 @@ const App: React.FC = () => {
       const tracks = videoStream.getTracks();
       tracks.forEach((track) => track.stop());
       setVideoStream(null);
+      socket.emit('stop_capture');
     }
   };
 
@@ -31,11 +38,15 @@ const App: React.FC = () => {
   }, [videoStream]);
 
   useEffect(() => {
+    socket.on('processed_frame', (frame: string) => {
+      setProcessedFrame(frame);
+    });
+
     return () => {
       stopCapture();
+      socket.disconnect();
     };
   }, []);
-
   return (
     <div>
        <h1 className="text-3xl font-bold underline">
@@ -49,6 +60,9 @@ const App: React.FC = () => {
       onClick={stopCapture}>Stop</button>
       <div  className='h-96 w-96 bg-pink-400'>
       {videoStream && <video ref={videoRef} autoPlay></video>}
+      </div>
+      <div>
+        {processedFrame && <img src={`data:image/jpeg;base64,${processedFrame}`} alt="Processed Frame" />}
       </div>
     </div>
   );
