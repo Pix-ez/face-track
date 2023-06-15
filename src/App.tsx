@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 
 
 
-const socket = io('http://127.0.0.1:5000'); 
+const socket = io('https://69e3-103-145-18-122.ngrok-free.app/'); 
 
 
 const App: React.FC = () => {
