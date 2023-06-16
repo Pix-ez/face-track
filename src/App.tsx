@@ -87,8 +87,8 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold underline">{text}</h1>
-      <h1 className="text-3xl font-bold underline">{text2}</h1>
+      <h1 className="text-3xl text-black font-bold underline">{text}</h1>
+      <h1 className="text-3xl text-black font-bold underline">{text2}</h1>
       <button className="p-2 m-3 bg-black text-white" onClick={startCapture}>
         Start
       </button>
