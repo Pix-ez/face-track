@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Socket, io } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 const socket = io('https://cc63-103-145-18-127.ngrok-free.app'); 
 
@@ -11,7 +11,7 @@ const App: React.FC = () => {
   // const [processedFrame, setProcessedFrame] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+
   const [processedFrames, setProcessedFrames] = useState<string[]>([]);
 
 
@@ -20,8 +20,6 @@ const App: React.FC = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setVideoStream(stream);
-
-      socketRef.current = socket;
 
       socket.on('connect', () => {
         console.log('Connected to server');
@@ -64,13 +62,14 @@ const App: React.FC = () => {
     }
   };
 
+  
   const stopCapture = () => {
     if (videoStream) {
       const tracks = videoStream.getTracks();
       tracks.forEach((track) => track.stop());
       setVideoStream(null);
 
-      const socket = socketRef.current;
+      
       if (socket) {
         socket.emit('stop_capture');
         socket.disconnect();
@@ -94,7 +93,7 @@ const App: React.FC = () => {
       {/* <div className="h-96 w-96 bg-pink-400">
         {videoStream && <video ref={videoRef} autoPlay muted playsInline></video>}
       </div> */}
-      <div className="h-96 w-96 bg-pink-400" >
+      <div className="h-96 w-96 bg-blue-600" >
         {processedFrames.map((frame, index) => (
           <img key={index} src={`data:image/jpeg;base64,${frame}`} alt={`Processed Frame ${index}`} />
         ))}
