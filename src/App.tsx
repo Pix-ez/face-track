@@ -91,10 +91,10 @@ const App: React.FC = () => {
       <button className="p-2 bg-black text-white" onClick={stopCapture}>
         Stop
       </button>
-      <div className="h-96 w-96 bg-pink-400">
+      {/* <div className="h-96 w-96 bg-pink-400">
         {videoStream && <video ref={videoRef} autoPlay muted playsInline></video>}
-      </div>
-      <div>
+      </div> */}
+      <div className="h-96 w-96 bg-pink-400" >
         {processedFrames.map((frame, index) => (
           <img key={index} src={`data:image/jpeg;base64,${frame}`} alt={`Processed Frame ${index}`} />
         ))}
