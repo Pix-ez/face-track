@@ -11,6 +11,8 @@ const App: React.FC = () => {
   // const [processedFrame, setProcessedFrame] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [text, setText] = useState('')
+  const [text2, setText2] = useState('')
 
   const [processedFrames, setProcessedFrames] = useState<string[]>([]);
 
@@ -26,6 +28,7 @@ const App: React.FC = () => {
       });
 
       socket.on('processed_frame', (processed_frame_bytes: string) => {
+       setText('recived')
         setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
       });
 
@@ -51,6 +54,7 @@ const App: React.FC = () => {
           const frame_data = canvas.toDataURL('image/jpeg', 0.8);
 
           socket.emit('video_frame', frame_data);
+          setText2("send")
 
           requestAnimationFrame(captureFrame);
         };
@@ -62,7 +66,7 @@ const App: React.FC = () => {
     }
   };
 
-  
+
   const stopCapture = () => {
     if (videoStream) {
       const tracks = videoStream.getTracks();
@@ -72,7 +76,7 @@ const App: React.FC = () => {
       
       if (socket) {
         socket.emit('stop_capture');
-        socket.disconnect();
+       
       }
     }
   };
@@ -83,7 +87,8 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+      <h1 className="text-3xl font-bold underline">{text}</h1>
+      <h1 className="text-3xl font-bold underline">{text2}</h1>
       <button className="p-2 m-3 bg-black text-white" onClick={startCapture}>
         Start
       </button>
