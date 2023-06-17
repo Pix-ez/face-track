@@ -84,34 +84,47 @@ const App: React.FC = () => {
   useEffect(() => {
     if (videoStream && videoRef.current) {
       videoRef.current.srcObject = videoStream;
-
+    
       // Send video frames to the server
       const sendVideoFrames = () => {
         const canvas = document.createElement('canvas');
         const frameRate = 1000 / 30; // Approximate frame rate of 30 fps
-
+    
         const sendFrame = () => {
           if (!videoStream.active || !videoRef.current) return;
-
+    
           canvas.width = videoRef.current.videoWidth;
           canvas.height = videoRef.current.videoHeight;
-
+    
           const context = canvas.getContext('2d');
           if (!context) return;
-
+    
           context.drawImage(videoRef.current, 0, 0);
-
-          const frame_data = canvas.toDataURL('image/jpeg');
-          socket.emit('video_frame', {frame_data});
-
+    
+          // Convert the frame to Blob object
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                // Send the frame as binary data to the server
+                socket.emit('video_frame', reader.result);
+              };
+              reader.readAsArrayBuffer(blob);
+            }
+          }, 'image/jpeg');
+    
           setTimeout(sendFrame, frameRate);
         };
-
+    
         sendFrame();
       };
+    
       sendVideoFrames();
     }
-  }, [videoStream]);
+    
+    
+    }
+  , [videoStream]);
 
 
   const stopCapture = () => {
