@@ -101,8 +101,8 @@ const App: React.FC = () => {
 
           context.drawImage(videoRef.current, 0, 0);
 
-          const imageData = canvas.toDataURL('image/jpeg');
-          socket.emit('video_frame', imageData);
+          const frame_data = canvas.toDataURL('image/jpeg');
+          socket.emit('video_frame', {frame_data});
 
           setTimeout(sendFrame, frameRate);
         };
