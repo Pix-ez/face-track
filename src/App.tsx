@@ -1,8 +1,8 @@
-//@ts-nocheck
+
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('https://af78-103-145-18-120.ngrok-free.app'); 
+const socket = io('https://af78-103-145-18-120.ngrok-free.app');
 // const socket = io('http://localhost:5001');
 
 
@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const [processedFrames, setProcessedFrames] = useState<string[]>([]);
 
 
-  
+
   // const startCapture = async () => {
   //   // socket.emit('video_frame', "frame_data");
 
@@ -59,33 +59,60 @@ const App: React.FC = () => {
   // };
 
 
-  useEffect(()=>{
-    const capture = async()=>{
+  useEffect(() => {
+    // Access the user's camera when the component mounts
+    const getVideoStream = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setVideoStream(stream);
+      } catch (error) {
+        console.log('Error accessing camera:', error);
+      }
+    };
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setVideoStream(stream)
-      videoRef.current?.srcObject = videoStream
+    getVideoStream();
 
-      const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d')
-      const framerate = 1000 /30 
-
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      context.drawImage(videoRef.current, 0, 0);
-
-      const imageData = canvas.toDataURL('image/jpeg');
-      socket.emit('video_frame', imageData);
-
-      // setTimeout()
-
-    }
-
-    capture()
+    // Clean up the video stream and socket when the component unmounts
+    return () => {
+      if (videoStream) {
+        videoStream.getTracks().forEach((track) => track.stop());
+      }
     
+    };
+  }, []);
 
+  useEffect(() => {
+    if (videoStream && videoRef.current) {
+      videoRef.current.srcObject = videoStream;
 
-  },[videoStream])
+      // Send video frames to the server
+      const sendVideoFrames = () => {
+        const canvas = document.createElement('canvas');
+        const frameRate = 1000 / 30; // Approximate frame rate of 30 fps
+
+        const sendFrame = () => {
+          if (!videoStream.active || !videoRef.current) return;
+
+          canvas.width = videoRef.current.videoWidth;
+          canvas.height = videoRef.current.videoHeight;
+
+          const context = canvas.getContext('2d');
+          if (!context) return;
+
+          context.drawImage(videoRef.current, 0, 0);
+
+          const imageData = canvas.toDataURL('image/jpeg');
+          socket.emit('video_frame', imageData);
+
+          setTimeout(sendFrame, frameRate);
+        };
+
+        sendFrame();
+      };
+      sendVideoFrames();
+    }
+  }, [videoStream]);
+
 
   const stopCapture = () => {
     if (videoStream) {
@@ -99,9 +126,9 @@ const App: React.FC = () => {
   useEffect(() => {
     socket.on('processed_frame', (processed_frame_bytes: string) => {
       setText('recived')
-       setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
-     });
-     return () => {
+      setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
+    });
+    return () => {
       socket.off('processed_frame')
     }
   }, []);
@@ -110,9 +137,9 @@ const App: React.FC = () => {
     <div>
       <h1 className="text-3xl text-black font-bold underline">{text}</h1>
       <h1 className="text-3xl text-black font-bold underline">{text2}</h1>
-      <button className="p-2 m-3 bg-black text-white" onClick={startCapture}>
+      {/* <button className="p-2 m-3 bg-black text-white" onClick={startCapture}>
         Start
-      </button>
+      </button> */}
       <button className="p-2 bg-black text-white" onClick={stopCapture}>
         Stop
       </button>
@@ -129,42 +156,42 @@ const App: React.FC = () => {
 };
 
 
-  // const startCapture = async () => {
-  //   try {
-  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  //     setVideoStream(stream);
-  //     socket.emit('start_capture');
-  //     startProcessingFrames(stream);
-  //   } catch (error) {
-  //     console.error('Error accessing camera:', error);
-  //   }
-  // };
+// const startCapture = async () => {
+//   try {
+//     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+//     setVideoStream(stream);
+//     socket.emit('start_capture');
+//     startProcessingFrames(stream);
+//   } catch (error) {
+//     console.error('Error accessing camera:', error);
+//   }
+// };
 
-  // const stopCapture = () => {
-  //   if (videoStream) {
-  //     const tracks = videoStream.getTracks();
-  //     tracks.forEach((track) => track.stop());
-  //     setVideoStream(null);
-  //     socket.emit('stop_capture');
-  //   }
-  // };
+// const stopCapture = () => {
+//   if (videoStream) {
+//     const tracks = videoStream.getTracks();
+//     tracks.forEach((track) => track.stop());
+//     setVideoStream(null);
+//     socket.emit('stop_capture');
+//   }
+// };
 
-  // useEffect(() => {
-  //   if (videoRef.current && videoStream) {
-  //     videoRef.current.srcObject = videoStream;
-  //   }
-  // }, [videoStream]);
+// useEffect(() => {
+//   if (videoRef.current && videoStream) {
+//     videoRef.current.srcObject = videoStream;
+//   }
+// }, [videoStream]);
 
-  // useEffect(() => {
-  //   socket.on('processed_frame', (frame: string) => {
-  //     setProcessedFrame(frame);
-  //   });
+// useEffect(() => {
+//   socket.on('processed_frame', (frame: string) => {
+//     setProcessedFrame(frame);
+//   });
 
-  //   return () => {
-  //     stopCapture();
-  //     socket.disconnect();
-  //   };
-  // }, []);
+//   return () => {
+//     stopCapture();
+//     socket.disconnect();
+//   };
+// }, []);
 
 //   return (
 //     <div>
