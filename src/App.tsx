@@ -12,8 +12,8 @@ const App: React.FC = () => {
   // const [processedFrame, setProcessedFrame] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [text, setText] = useState('')
-  const [text2, setText2] = useState('')
+  // const [text, setText] = useState('')
+  // // const [text2, setText2] = useState('')
 
   const [processedFrames, setProcessedFrames] = useState<string[]>([]);
 
@@ -125,7 +125,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     socket.on('processed_frame', (processed_frame_bytes: string) => {
-      setText('recived')
+      // setText('recived')
       setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
     });
     return () => {
@@ -135,8 +135,8 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-3xl text-black font-bold underline">{text}</h1>
-      <h1 className="text-3xl text-black font-bold underline">{text2}</h1>
+      {/* <h1 className="text-3xl text-black font-bold underline">{text}</h1>
+      <h1 className="text-3xl text-black font-bold underline">{text2}</h1> */}
       {/* <button className="p-2 m-3 bg-black text-white" onClick={startCapture}>
         Start
       </button> */}
