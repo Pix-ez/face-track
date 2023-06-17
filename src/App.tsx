@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('https://cc63-103-145-18-127.ngrok-free.app'); 
+const socket = io('https://af78-103-145-18-120.ngrok-free.app'); 
+// const socket = io('http://localhost:5001');
 
 
 const App: React.FC = () => {
@@ -18,54 +19,73 @@ const App: React.FC = () => {
 
 
   
-  const startCapture = async () => {
-    try {
+  // const startCapture = async () => {
+  //   // socket.emit('video_frame', "frame_data");
+
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+  //     // setVideoStream(stream);
+  //     // const videoElement = videoRef.current;
+  //     // if (videoElement) {
+  //     //   videoElement.srcObject = stream;
+
+  //     //   const videoTrack = stream.getVideoTracks()[0];
+  //     //   const videoSettings = videoTrack.getSettings();
+  //     //   const videoWidth = videoSettings.width || 640;
+  //     //   const videoHeight = videoSettings.height || 480;
+
+  //     //   const canvas = document.createElement('canvas');
+  //     //   const canvasContext = canvas.getContext('2d');
+
+  //     //   const captureFrame = () => {
+  //     //     canvas.width = videoWidth;
+  //     //     canvas.height = videoHeight;
+
+  //     //     canvasContext?.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+  //     //     const frame_data = canvas.toDataURL('image/jpeg', 0.8);
+
+  //     //     socket.emit('video_frame', frame_data);
+  //     //     setText2("send")
+
+  //     //     requestAnimationFrame(captureFrame);
+  //     //   };
+
+  //     //   requestAnimationFrame(captureFrame);
+  //     // }
+  //   } catch (error) {
+  //     console.error('Error accessing camera:', error);
+  //   }
+  // };
+
+
+  useEffect(()=>{
+    const capture = async()=>{
+
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setVideoStream(stream);
+      setVideoStream(stream)
+      videoRef.current?.srcObject = videoStream
 
-      socket.on('connect', () => {
-        console.log('Connected to server');
-      });
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      const framerate = 1000 /30 
 
-      socket.on('processed_frame', (processed_frame_bytes: string) => {
-       setText('recived')
-        setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
-      });
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0);
 
-      socket.emit('start_capture');
+      const imageData = canvas.toDataURL('image/jpeg');
+      socket.emit('video_frame', imageData);
 
-      const videoElement = videoRef.current;
-      if (videoElement) {
-        videoElement.srcObject = stream;
+      // setTimeout()
 
-        const videoTrack = stream.getVideoTracks()[0];
-        const videoSettings = videoTrack.getSettings();
-        const videoWidth = videoSettings.width || 640;
-        const videoHeight = videoSettings.height || 480;
-
-        const canvas = document.createElement('canvas');
-        const canvasContext = canvas.getContext('2d');
-
-        const captureFrame = () => {
-          canvas.width = videoWidth;
-          canvas.height = videoHeight;
-
-          canvasContext?.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
-          const frame_data = canvas.toDataURL('image/jpeg', 0.8);
-
-          socket.emit('video_frame', frame_data);
-          setText2("send")
-
-          requestAnimationFrame(captureFrame);
-        };
-
-        requestAnimationFrame(captureFrame);
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
     }
-  };
 
+    capture()
+    
+
+
+  },[videoStream])
 
   const stopCapture = () => {
     if (videoStream) {
@@ -73,16 +93,17 @@ const App: React.FC = () => {
       tracks.forEach((track) => track.stop());
       setVideoStream(null);
 
-      
-      if (socket) {
-        socket.emit('stop_capture');
-       
-      }
     }
   };
 
   useEffect(() => {
-    return stopCapture;
+    socket.on('processed_frame', (processed_frame_bytes: string) => {
+      setText('recived')
+       setProcessedFrames((prevFrames) => [...prevFrames, processed_frame_bytes]);
+     });
+     return () => {
+      socket.off('processed_frame')
+    }
   }, []);
 
   return (
